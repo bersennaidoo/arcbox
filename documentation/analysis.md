@@ -9,13 +9,19 @@
 # Usercases
 
 1. snipView
+
     user sends snipView message to system
+
     system system retrieves snip from db
+
     system responds with a specific snip
 
 2. snipCreate
+
     user sends snipCreate message to system
+
     system messages db to create snip
+
     system responds with snip created
 
 
