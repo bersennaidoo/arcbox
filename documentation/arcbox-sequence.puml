@@ -1,0 +1,11 @@
+title ArcBox API
+
+@startuml
+
+user -> snipView: User Gets A Specific Snip 
+snipView -> db: snipView Gets A Snip From DB
+db --> snipView: DB returns Snip To snipView
+snipView --> user: snipView responds with snip to user 
+
+@enduml
+
