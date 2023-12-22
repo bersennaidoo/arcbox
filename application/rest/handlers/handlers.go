@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
+	"text/template"
 )
 
 type SnipHandler struct {
@@ -19,7 +21,24 @@ func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Hello from ArcBox"))
+	files := []string{
+		"./hci/html/base.tmpl",
+		"./hci/html/partials/nav.tmpl",
+		"./hci/html/pages/home.tmpl",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	err = ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+	}
 }
 
 func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
