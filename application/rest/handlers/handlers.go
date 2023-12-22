@@ -2,17 +2,21 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"text/template"
+
+	"github.com/kataras/golog"
 )
 
 type SnipHandler struct {
+	log *golog.Logger
 }
 
-func New() *SnipHandler {
-	return &SnipHandler{}
+func New(log *golog.Logger) *SnipHandler {
+	return &SnipHandler{
+		log: log,
+	}
 }
 
 func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
@@ -29,14 +33,14 @@ func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Println(err.Error())
+		h.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		log.Println(err.Error())
+		h.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }

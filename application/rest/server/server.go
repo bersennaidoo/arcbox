@@ -1,26 +1,31 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/bersennaidoo/arcbox/application/rest/handlers"
 	"github.com/gorilla/mux"
+	"github.com/kataras/golog"
+	"github.com/spf13/viper"
 )
 
 type HttpServer struct {
 	router      *mux.Router
 	snipHandler *handlers.SnipHandler
+	config      *viper.Viper
+	log         *golog.Logger
 }
 
-func New(snipHandler *handlers.SnipHandler) *HttpServer {
+func New(snipHandler *handlers.SnipHandler, config *viper.Viper, log *golog.Logger) *HttpServer {
 	return &HttpServer{
+		router:      mux.NewRouter(),
 		snipHandler: snipHandler,
+		config:      config,
+		log:         log,
 	}
 }
 
 func (s *HttpServer) InitRouter() {
-	s.router = mux.NewRouter()
 
 	fileServer := http.FileServer(http.Dir("./hci/static/"))
 	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
@@ -32,7 +37,16 @@ func (s *HttpServer) InitRouter() {
 
 func (s *HttpServer) Start() {
 
-	log.Println("Server Starting on :3000")
-	err := http.ListenAndServe(":3000", s.router)
-	log.Fatal(err)
+	addr := s.config.GetString("http.http_addr")
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: s.router,
+	}
+
+	s.log.Debugf("Server Starting on :3000")
+
+	err := srv.ListenAndServe()
+	if err != nil {
+		s.log.Fatal(err)
+	}
 }

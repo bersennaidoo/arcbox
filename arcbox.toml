@@ -1,0 +1,22 @@
+##############################################################################
+# DATABASE CONFIGURATION DATA
+[database]
+
+connection_string = "root:bersen@/arcbox"
+max_idle_connections = 5
+max_open_connections = 20
+connection_max_lifetime = "60s"
+driver_name = "mysql"
+
+###############################################################################
+# HTTP server configuration
+
+[http]
+
+http_addr = ":3000"
+
+[https]
+
+https_addr = ":443"
+###############################################################################
+
