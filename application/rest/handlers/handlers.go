@@ -6,16 +6,19 @@ import (
 	"strconv"
 	"text/template"
 
+	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
 	"github.com/kataras/golog"
 )
 
 type SnipHandler struct {
 	log *golog.Logger
+	dbc *mysql.SnipsRepository
 }
 
-func New(log *golog.Logger) *SnipHandler {
+func New(log *golog.Logger, dbc *mysql.SnipsRepository) *SnipHandler {
 	return &SnipHandler{
 		log: log,
+		dbc: dbc,
 	}
 }
 

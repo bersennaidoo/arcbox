@@ -3,6 +3,7 @@ module github.com/bersennaidoo/arcbox
 go 1.21.0
 
 require (
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gorilla/mux v1.8.1
 	github.com/kataras/golog v0.1.11
 	github.com/spf13/viper v1.18.2
