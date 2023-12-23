@@ -9,14 +9,19 @@ import (
 
 func New() *glog.Logger {
 	logger := glog.New()
-	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	infolog, err := os.OpenFile("info.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	errorlog, err := os.OpenFile("errorlog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	logger.SetOutput(os.Stdout)
 	logger.SetLevel("debug")
-	logger.SetLevelOutput("info", file)
+	logger.SetLevelOutput("info", infolog)
+	logger.SetLevelOutput("error", errorlog)
 
 	return logger
 }
