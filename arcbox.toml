@@ -2,7 +2,7 @@
 # DATABASE CONFIGURATION DATA
 [database]
 
-connection_string = "root:bersen@/arcbox"
+connection_string = "root:bersen@/arcbox?parseTime=true"
 max_idle_connections = 5
 max_open_connections = 20
 connection_max_lifetime = "60s"
