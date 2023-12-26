@@ -33,7 +33,7 @@ func (s *HttpServer) InitRouter() {
 	fileServer := http.FileServer(http.Dir("./hci/static/"))
 	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
 
-	s.router.Use(s.mid.LogRequest, s.mid.SecureHeaders)
+	s.router.Use(s.mid.RecoverPanic, s.mid.LogRequest, s.mid.SecureHeaders)
 	s.router.HandleFunc("/", s.snipHandler.Home).Methods("GET")
 	s.router.HandleFunc("/snip/view", s.snipHandler.SnipView).Methods("GET")
 	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreate).Methods("POST")
