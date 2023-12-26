@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bersennaidoo/arcbox/application/rest/handlers"
+	"github.com/bersennaidoo/arcbox/application/rest/mid"
 	"github.com/bersennaidoo/arcbox/application/rest/server"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
 	"github.com/bersennaidoo/arcbox/physical/config"
@@ -17,7 +18,8 @@ func main() {
 	sr := mysql.New(dbc)
 	tempcache, _ := handlers.NewTemplateCache()
 	h := handlers.New(log, sr, tempcache)
-	srv := server.New(h, cfg, log)
+	m := mid.New(log)
+	srv := server.New(h, cfg, log, m)
 	srv.InitRouter()
 
 	log.Info("Starting the application...")
