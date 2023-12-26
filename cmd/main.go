@@ -15,7 +15,8 @@ func main() {
 	cfg := config.New(filename)
 	dbc := dbc.New(cfg)
 	sr := mysql.New(dbc)
-	h := handlers.New(log, sr)
+	tempcache, _ := handlers.NewTemplateCache()
+	h := handlers.New(log, sr, tempcache)
 	srv := server.New(h, cfg, log)
 	srv.InitRouter()
 

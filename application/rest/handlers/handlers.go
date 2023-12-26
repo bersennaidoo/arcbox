@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"text/template"
 
 	"github.com/bersennaidoo/arcbox/domain/models"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
@@ -14,12 +15,14 @@ import (
 type SnipHandler struct {
 	log             *golog.Logger
 	snipsRepository *mysql.SnipsRepository
+	templateCache   map[string]*template.Template
 }
 
-func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository) *SnipHandler {
+func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, templateCache map[string]*template.Template) *SnipHandler {
 	return &SnipHandler{
 		log:             log,
 		snipsRepository: snipsRepository,
+		templateCache:   templateCache,
 	}
 }
 
@@ -34,28 +37,9 @@ func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
-	for _, snip := range snips {
-		fmt.Fprintf(w, "%+v\n", snip)
-	}
-
-	/*files := []string{
-		"./hci/html/base.tmpl",
-		"./hci/html/partials/nav.tmpl",
-		"./hci/html/pages/home.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		h.serverError(w, err)
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
-
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		h.serverError(w, err)
-		http.Error(w, "Internal Server Error", 500)
-	}*/
+	data := h.newTemplateData(r)
+	data.Snips = snips
+	h.render(w, http.StatusOK, "home.tmpl", data)
 }
 
 func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
@@ -74,8 +58,11 @@ func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	// Write the snippet data as a plain-text HTTP response body.
-	fmt.Fprintf(w, "%+v", snip)
+
+	data := h.newTemplateData(r)
+	data.Snip = snip
+
+	h.render(w, http.StatusOK, "view.tmpl", data)
 }
 
 func (h *SnipHandler) SnipCreate(w http.ResponseWriter, r *http.Request) {
