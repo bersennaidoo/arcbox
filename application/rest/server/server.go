@@ -35,8 +35,9 @@ func (s *HttpServer) InitRouter() {
 
 	s.router.Use(s.mid.RecoverPanic, s.mid.LogRequest, s.mid.SecureHeaders)
 	s.router.HandleFunc("/", s.snipHandler.Home).Methods("GET")
-	s.router.HandleFunc("/snip/view", s.snipHandler.SnipView).Methods("GET")
-	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreate).Methods("POST")
+	s.router.HandleFunc("/snip/view/{id:[0-9]+}", s.snipHandler.SnipView).Methods("GET")
+	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreate).Methods("GET")
+	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreatePost).Methods("POST")
 }
 
 func (s *HttpServer) Start() {

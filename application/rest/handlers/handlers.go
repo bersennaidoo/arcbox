@@ -9,6 +9,7 @@ import (
 
 	"github.com/bersennaidoo/arcbox/domain/models"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
+	"github.com/gorilla/mux"
 	"github.com/kataras/golog"
 )
 
@@ -27,10 +28,6 @@ func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, templateCach
 }
 
 func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		h.notFound(w)
-		return
-	}
 
 	snips, err := h.snipsRepository.Latest()
 	if err != nil {
@@ -39,11 +36,14 @@ func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
 	}
 	data := h.newTemplateData(r)
 	data.Snips = snips
+
 	h.render(w, http.StatusOK, "home.tmpl", data)
 }
 
 func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	params := mux.Vars(r)
+	ids := params["id"]
+	id, err := strconv.Atoi(ids)
 	if err != nil || id < 1 {
 		h.notFound(w)
 		return
@@ -65,7 +65,7 @@ func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
 	h.render(w, http.StatusOK, "view.tmpl", data)
 }
 
-func (h *SnipHandler) SnipCreate(w http.ResponseWriter, r *http.Request) {
+func (h *SnipHandler) SnipCreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		h.clientError(w, http.StatusMethodNotAllowed)
@@ -81,5 +81,10 @@ func (h *SnipHandler) SnipCreate(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/snip/view?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snip/view/%d", id), http.StatusSeeOther)
+}
+
+func (h *SnipHandler) SnipCreate(w http.ResponseWriter, r *http.Request) {
+
+	w.Write([]byte("Displaying the form for creating a new snip..."))
 }
