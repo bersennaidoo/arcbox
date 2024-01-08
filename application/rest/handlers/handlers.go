@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"text/template"
+	"unicode/utf8"
 
 	"github.com/bersennaidoo/arcbox/domain/models"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
@@ -66,25 +68,63 @@ func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SnipHandler) SnipCreatePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		h.clientError(w, http.StatusMethodNotAllowed)
+
+	err := r.ParseForm()
+	if err != nil {
+		h.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	title := "0 snail"
-	content := "0 snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n- Kobayashi Issa"
-	expires := 7
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		h.clientError(w, http.StatusBadRequest)
+		return
+	}
 
-	id, err := h.snipsRepository.Insert(title, content, expires)
+	form := snipCreateForm{
+		Title:       r.PostForm.Get("title"),
+		Content:     r.PostForm.Get("content"),
+		Expires:     expires,
+		FieldErrors: map[string]string{},
+	}
+
+	if strings.TrimSpace(form.Title) == "" {
+		form.FieldErrors["title"] = "This field cannot be blank"
+	} else if utf8.RuneCountInString(form.Title) > 100 {
+		form.FieldErrors["title"] = "This field cannot be more than 100 characters long"
+	}
+
+	if strings.TrimSpace(form.Content) == "" {
+		form.FieldErrors["content"] = "This field cannot be blank"
+	}
+
+	if form.Expires != 1 && form.Expires != 7 && form.Expires != 365 {
+		form.FieldErrors["expires"] = "This field must equal 1, 7 or 365"
+	}
+
+	if len(form.FieldErrors) > 0 {
+		data := h.newTemplateData(r)
+		data.Form = form
+		h.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
+		return
+	}
+
+	id, err := h.snipsRepository.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		h.serverError(w, err)
 		return
 	}
+
 	http.Redirect(w, r, fmt.Sprintf("/snip/view/%d", id), http.StatusSeeOther)
 }
 
 func (h *SnipHandler) SnipCreate(w http.ResponseWriter, r *http.Request) {
 
-	w.Write([]byte("Displaying the form for creating a new snip..."))
+	data := h.newTemplateData(r)
+
+	data.Form = snipCreateForm{
+		Expires: 365,
+	}
+
+	h.render(w, http.StatusOK, "create.tmpl", data)
 }

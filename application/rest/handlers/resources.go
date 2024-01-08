@@ -9,10 +9,18 @@ import (
 	"github.com/bersennaidoo/arcbox/domain/models"
 )
 
+type snipCreateForm struct {
+	Title       string
+	Content     string
+	Expires     int
+	FieldErrors map[string]string
+}
+
 type templateData struct {
 	CurrentYear int
 	Snip        *models.Snip
 	Snips       []*models.Snip
+	Form        any
 }
 
 func humanDate(t time.Time) string {
