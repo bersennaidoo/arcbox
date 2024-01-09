@@ -11,10 +11,10 @@ import (
 )
 
 type snipCreateForm struct {
-	Title   string
-	Content string
-	Expires int
-	validator.Validator
+	Title               string `schema:"title"`
+	Content             string `schema:"content"`
+	Expires             int    `schema:"expires"`
+	validator.Validator `schema:"-"`
 }
 
 type templateData struct {

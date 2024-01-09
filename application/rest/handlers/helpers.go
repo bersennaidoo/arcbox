@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/gorilla/schema"
 )
 
 func (h *SnipHandler) render(w http.ResponseWriter, status int, page string, data *templateData) {
@@ -24,4 +27,21 @@ func (h *SnipHandler) render(w http.ResponseWriter, status int, page string, dat
 	w.WriteHeader(status)
 
 	buf.WriteTo(w)
+}
+
+func (h *SnipHandler) decodePostForm(r *http.Request, dst any) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	err = h.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		var invalidDecoderError *schema.ConversionError
+		if errors.As(err, &invalidDecoderError) {
+			panic(err)
+		}
+		return err
+	}
+	return nil
 }

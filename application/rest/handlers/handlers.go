@@ -11,6 +11,7 @@ import (
 	"github.com/bersennaidoo/arcbox/domain/models"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/kataras/golog"
 )
 
@@ -18,13 +19,15 @@ type SnipHandler struct {
 	log             *golog.Logger
 	snipsRepository *mysql.SnipsRepository
 	templateCache   map[string]*template.Template
+	formDecoder     *schema.Decoder
 }
 
-func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, templateCache map[string]*template.Template) *SnipHandler {
+func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, templateCache map[string]*template.Template, formDecoder *schema.Decoder) *SnipHandler {
 	return &SnipHandler{
 		log:             log,
 		snipsRepository: snipsRepository,
 		templateCache:   templateCache,
+		formDecoder:     formDecoder,
 	}
 }
 
@@ -68,22 +71,12 @@ func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
 
 func (h *SnipHandler) SnipCreatePost(w http.ResponseWriter, r *http.Request) {
 
-	err := r.ParseForm()
+	var form snipCreateForm
+
+	err := h.decodePostForm(r, &form)
 	if err != nil {
 		h.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err != nil {
-		h.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	form := snipCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
 	}
 
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
