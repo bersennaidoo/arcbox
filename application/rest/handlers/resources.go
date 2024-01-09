@@ -6,14 +6,15 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/bersennaidoo/arcbox/application/rest/validator"
 	"github.com/bersennaidoo/arcbox/domain/models"
 )
 
 type snipCreateForm struct {
-	Title       string
-	Content     string
-	Expires     int
-	FieldErrors map[string]string
+	Title   string
+	Content string
+	Expires int
+	validator.Validator
 }
 
 type templateData struct {
