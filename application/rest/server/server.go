@@ -1,7 +1,9 @@
 package server
 
 import (
+	"crypto/tls"
 	"net/http"
+	"time"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/bersennaidoo/arcbox/application/rest/handlers"
@@ -47,15 +49,26 @@ func (s *HttpServer) InitRouter() {
 
 func (s *HttpServer) Start() {
 
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+		MinVersion:       tls.VersionTLS12,
+		MaxVersion:       tls.VersionTLS12,
+	}
+
 	addr := s.config.GetString("http.http_addr")
 	srv := &http.Server{
-		Addr:    addr,
-		Handler: s.sessionManager.LoadAndSave(s.router),
+		Addr:         addr,
+		Handler:      s.sessionManager.LoadAndSave(s.router),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	s.log.Debugf("Server Starting on :3000")
 
-	err := srv.ListenAndServe()
+	err := srv.ListenAndServeTLS("./documentation/certs/cert.pem",
+		"./documentation/certs/key.pem")
 	if err != nil {
 		s.log.Fatal(err)
 	}
