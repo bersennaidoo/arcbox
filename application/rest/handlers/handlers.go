@@ -101,6 +101,8 @@ func (h *SnipHandler) SnipCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.sessionManager.Put(r.Context(), "flash", "Snip successfully created!")
+
 	http.Redirect(w, r, fmt.Sprintf("/snip/view/%d", id), http.StatusSeeOther)
 }
 

@@ -23,7 +23,7 @@ func main() {
 	sessionM := session.New(dbc)
 	h := handlers.New(log, sr, tempcache, decoder, sessionM)
 	m := mid.New(log)
-	srv := server.New(h, cfg, log, m)
+	srv := server.New(h, cfg, log, m, sessionM)
 	srv.InitRouter()
 
 	log.Info("Starting the application...")

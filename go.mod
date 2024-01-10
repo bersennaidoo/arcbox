@@ -15,6 +15,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gorilla/schema v1.2.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/justinas/alice v1.2.0 // indirect
 	github.com/kataras/pio v0.0.13 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
