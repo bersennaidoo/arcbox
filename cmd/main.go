@@ -9,6 +9,7 @@ import (
 	"github.com/bersennaidoo/arcbox/physical/config"
 	"github.com/bersennaidoo/arcbox/physical/dbc"
 	"github.com/bersennaidoo/arcbox/physical/logger"
+	"github.com/bersennaidoo/arcbox/physical/session"
 )
 
 func main() {
@@ -19,7 +20,8 @@ func main() {
 	sr := mysql.New(dbc)
 	decoder := formdecode.New()
 	tempcache, _ := handlers.NewTemplateCache()
-	h := handlers.New(log, sr, tempcache, decoder)
+	sessionM := session.New(dbc)
+	h := handlers.New(log, sr, tempcache, decoder, sessionM)
 	m := mid.New(log)
 	srv := server.New(h, cfg, log, m)
 	srv.InitRouter()

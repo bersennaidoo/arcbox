@@ -10,6 +10,8 @@ require (
 )
 
 require (
+	github.com/alexedwards/scs/mysqlstore v0.0.0-20231113091146-cef4b05350c8 // indirect
+	github.com/alexedwards/scs/v2 v2.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gorilla/schema v1.2.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

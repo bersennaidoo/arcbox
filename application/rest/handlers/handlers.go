@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"text/template"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/bersennaidoo/arcbox/application/rest/validator"
 	"github.com/bersennaidoo/arcbox/domain/models"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
@@ -20,14 +21,17 @@ type SnipHandler struct {
 	snipsRepository *mysql.SnipsRepository
 	templateCache   map[string]*template.Template
 	formDecoder     *schema.Decoder
+	sessionManager  *scs.SessionManager
 }
 
-func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, templateCache map[string]*template.Template, formDecoder *schema.Decoder) *SnipHandler {
+func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository,
+	templateCache map[string]*template.Template, formDecoder *schema.Decoder, sessionManager *scs.SessionManager) *SnipHandler {
 	return &SnipHandler{
 		log:             log,
 		snipsRepository: snipsRepository,
 		templateCache:   templateCache,
 		formDecoder:     formDecoder,
+		sessionManager:  sessionManager,
 	}
 }
 
