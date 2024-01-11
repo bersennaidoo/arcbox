@@ -45,6 +45,12 @@ func (s *HttpServer) InitRouter() {
 	s.router.HandleFunc("/snip/view/{id:[0-9]+}", s.snipHandler.SnipView).Methods("GET")
 	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreate).Methods("GET")
 	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreatePost).Methods("POST")
+
+	s.router.HandleFunc("/user/signup", s.snipHandler.UserSignup).Methods("GET")
+	s.router.HandleFunc("/user/signup", s.snipHandler.UserSignupPost).Methods("POST")
+	s.router.HandleFunc("/user/login", s.snipHandler.UserLogin).Methods("GET")
+	s.router.HandleFunc("/user/login", s.snipHandler.UserLoginPost).Methods("POST")
+	s.router.HandleFunc("/user/logout", s.snipHandler.UserLogoutPost).Methods("POST")
 }
 
 func (s *HttpServer) Start() {

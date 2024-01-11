@@ -19,16 +19,19 @@ import (
 type SnipHandler struct {
 	log             *golog.Logger
 	snipsRepository *mysql.SnipsRepository
+	usersRepository *mysql.UsersRepository
 	templateCache   map[string]*template.Template
 	formDecoder     *schema.Decoder
 	sessionManager  *scs.SessionManager
 }
 
-func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository,
-	templateCache map[string]*template.Template, formDecoder *schema.Decoder, sessionManager *scs.SessionManager) *SnipHandler {
+func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, usersRepository *mysql.UsersRepository,
+	templateCache map[string]*template.Template, formDecoder *schema.Decoder,
+	sessionManager *scs.SessionManager) *SnipHandler {
 	return &SnipHandler{
 		log:             log,
 		snipsRepository: snipsRepository,
+		usersRepository: usersRepository,
 		templateCache:   templateCache,
 		formDecoder:     formDecoder,
 		sessionManager:  sessionManager,

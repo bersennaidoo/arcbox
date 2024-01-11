@@ -8,12 +8,12 @@ import (
 )
 
 type SnipsRepository struct {
-	dbc *sql.DB
+	dbs *sql.DB
 }
 
-func New(dbc *sql.DB) *SnipsRepository {
+func NewSnipsRepository(dbs *sql.DB) *SnipsRepository {
 	return &SnipsRepository{
-		dbc: dbc,
+		dbs: dbs,
 	}
 }
 
@@ -21,7 +21,7 @@ func (s *SnipsRepository) Insert(title string, content string, expires int) (int
 	stmt := `INSERT INTO snips (title, content, created, expires)
 VALUES(?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
 
-	result, err := s.dbc.Exec(stmt, title, content, expires)
+	result, err := s.dbs.Exec(stmt, title, content, expires)
 	if err != nil {
 		return 0, err
 	}
@@ -37,7 +37,7 @@ func (s *SnipsRepository) Get(id int) (*models.Snip, error) {
 	stmt := `SELECT id, title, content, created, expires FROM snips
 WHERE expires > UTC_TIMESTAMP() AND id = ?`
 
-	row := s.dbc.QueryRow(stmt, id)
+	row := s.dbs.QueryRow(stmt, id)
 
 	snip := models.Snip{}
 
@@ -58,7 +58,7 @@ func (s *SnipsRepository) Latest() ([]*models.Snip, error) {
 	stmt := `SELECT id, title, content, created, expires FROM snips
 WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
 
-	rows, err := s.dbc.Query(stmt)
+	rows, err := s.dbs.Query(stmt)
 	if err != nil {
 		return nil, err
 	}
