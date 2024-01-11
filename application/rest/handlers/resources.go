@@ -17,12 +17,25 @@ type snipCreateForm struct {
 	validator.Validator `schema:"-"`
 }
 
+type userLoginForm struct {
+	Email               string `schema:"email"`
+	Password            string `schema:"password"`
+	validator.Validator `schema:"-"`
+}
+
 type templateData struct {
 	CurrentYear int
 	Snip        *models.Snip
 	Snips       []*models.Snip
 	Form        any
 	Flash       string
+}
+
+type userSignupForm struct {
+	Name                string `schema:"name"`
+	Email               string `schema:"email"`
+	Password            string `schema:"password"`
+	validator.Validator `schema:"-"`
 }
 
 func humanDate(t time.Time) string {
