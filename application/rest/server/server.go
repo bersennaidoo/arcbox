@@ -8,6 +8,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/bersennaidoo/arcbox/application/rest/handlers"
 	"github.com/bersennaidoo/arcbox/application/rest/mid"
+	"github.com/bersennaidoo/arcbox/hci"
 	"github.com/gorilla/mux"
 	"github.com/kataras/golog"
 	"github.com/spf13/viper"
@@ -36,8 +37,11 @@ func New(snipHandler *handlers.SnipHandler, config *viper.Viper, log *golog.Logg
 
 func (s *HttpServer) InitRouter() {
 
-	fileServer := http.FileServer(http.Dir("./hci/static/"))
-	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
+	//fileServer := http.FileServer(http.Dir("./hci/static/"))
+	//s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
+
+	fileServer := http.FileServer(http.FS(hci.Files))
+	s.router.PathPrefix("/static").Handler(http.StripPrefix("", fileServer))
 
 	auth := s.router.PathPrefix("/snip").Subrouter()
 	authu := s.router.PathPrefix("/user").Subrouter()
