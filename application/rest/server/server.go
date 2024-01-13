@@ -39,18 +39,25 @@ func (s *HttpServer) InitRouter() {
 	fileServer := http.FileServer(http.Dir("./hci/static/"))
 	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
 
-	s.router.Use(s.mid.RecoverPanic, s.mid.LogRequest, s.mid.SecureHeaders)
+	auth := s.router.PathPrefix("/snip").Subrouter()
+	authu := s.router.PathPrefix("/user").Subrouter()
+
+	s.router.Use(s.mid.RecoverPanic, s.mid.LogRequest, s.mid.Authenticate, s.mid.SecureHeaders)
+	auth.Use(s.mid.RecoverPanic, s.mid.LogRequest, s.mid.RequireAuthentication, s.mid.SecureHeaders)
+	authu.Use(s.mid.RecoverPanic, s.mid.LogRequest, s.mid.RequireAuthentication, s.mid.SecureHeaders)
+
+	auth.HandleFunc("/create", s.snipHandler.SnipCreate).Methods("GET")
+	auth.HandleFunc("/create", s.snipHandler.SnipCreatePost).Methods("POST")
+
+	authu.HandleFunc("/logout", s.snipHandler.UserLogoutPost).Methods("POST")
 
 	s.router.HandleFunc("/", s.snipHandler.Home).Methods("GET")
 	s.router.HandleFunc("/snip/view/{id:[0-9]+}", s.snipHandler.SnipView).Methods("GET")
-	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreate).Methods("GET")
-	s.router.HandleFunc("/snip/create", s.snipHandler.SnipCreatePost).Methods("POST")
-
 	s.router.HandleFunc("/user/signup", s.snipHandler.UserSignup).Methods("GET")
 	s.router.HandleFunc("/user/signup", s.snipHandler.UserSignupPost).Methods("POST")
 	s.router.HandleFunc("/user/login", s.snipHandler.UserLogin).Methods("GET")
 	s.router.HandleFunc("/user/login", s.snipHandler.UserLoginPost).Methods("POST")
-	s.router.HandleFunc("/user/logout", s.snipHandler.UserLogoutPost).Methods("POST")
+	http.Handle("/", s.router)
 }
 
 func (s *HttpServer) Start() {

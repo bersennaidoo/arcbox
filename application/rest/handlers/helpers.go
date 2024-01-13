@@ -45,3 +45,7 @@ func (h *SnipHandler) decodePostForm(r *http.Request, dst any) error {
 	}
 	return nil
 }
+
+func (h *SnipHandler) isAuthenticated(r *http.Request) bool {
+	return h.sessionManager.Exists(r.Context(), "authenticatedUserID")
+}

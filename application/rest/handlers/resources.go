@@ -24,11 +24,12 @@ type userLoginForm struct {
 }
 
 type templateData struct {
-	CurrentYear int
-	Snip        *models.Snip
-	Snips       []*models.Snip
-	Form        any
-	Flash       string
+	CurrentYear     int
+	Snip            *models.Snip
+	Snips           []*models.Snip
+	Form            any
+	Flash           string
+	IsAuthenticated bool
 }
 
 type userSignupForm struct {
@@ -80,7 +81,8 @@ func NewTemplateCache() (map[string]*template.Template, error) {
 
 func (h *SnipHandler) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
-		CurrentYear: time.Now().Year(),
-		Flash:       h.sessionManager.PopString(r.Context(), "flash"),
+		CurrentYear:     time.Now().Year(),
+		Flash:           h.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: h.isAuthenticated(r),
 	}
 }

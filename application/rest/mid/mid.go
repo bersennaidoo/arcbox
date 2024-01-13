@@ -1,21 +1,68 @@
 package mid
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 
+	"github.com/alexedwards/scs/v2"
+	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
 	"github.com/kataras/golog"
 )
 
 type Middleware struct {
-	log *golog.Logger
+	log             *golog.Logger
+	sessionManager  *scs.SessionManager
+	usersRepository *mysql.UsersRepository
 }
 
-func New(log *golog.Logger) *Middleware {
+func New(log *golog.Logger, sessionManager *scs.SessionManager, usersRepository *mysql.UsersRepository) *Middleware {
 	return &Middleware{
-		log: log,
+		log:             log,
+		sessionManager:  sessionManager,
+		usersRepository: usersRepository,
 	}
+}
+
+func (m *Middleware) Authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := m.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		if id == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+		exists, err := m.usersRepository.Exists(id)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+			r = r.WithContext(ctx)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (m *Middleware) RequireAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !m.isAuthenticated(r) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+		w.Header().Add("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (m *Middleware) isAuthenticated(r *http.Request) bool {
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+		return false
+	}
+
+	return isAuthenticated
 }
 
 func (m *Middleware) SecureHeaders(next http.Handler) http.Handler {

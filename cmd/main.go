@@ -23,7 +23,7 @@ func main() {
 	tempcache, _ := handlers.NewTemplateCache()
 	sessionM := session.New(dbc)
 	h := handlers.New(log, sr, ur, tempcache, decoder, sessionM)
-	m := mid.New(log)
+	m := mid.New(log, sessionM, ur)
 	srv := server.New(h, cfg, log, m, sessionM)
 	srv.InitRouter()
 
