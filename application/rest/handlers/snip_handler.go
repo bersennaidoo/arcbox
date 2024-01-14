@@ -16,7 +16,7 @@ import (
 	"github.com/kataras/golog"
 )
 
-type SnipHandler struct {
+type Handler struct {
 	log             *golog.Logger
 	snipsRepository *mysql.SnipsRepository
 	usersRepository *mysql.UsersRepository
@@ -27,8 +27,8 @@ type SnipHandler struct {
 
 func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, usersRepository *mysql.UsersRepository,
 	templateCache map[string]*template.Template, formDecoder *schema.Decoder,
-	sessionManager *scs.SessionManager) *SnipHandler {
-	return &SnipHandler{
+	sessionManager *scs.SessionManager) *Handler {
+	return &Handler{
 		log:             log,
 		snipsRepository: snipsRepository,
 		usersRepository: usersRepository,
@@ -38,7 +38,11 @@ func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, usersReposit
 	}
 }
 
-func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 
 	snips, err := h.snipsRepository.Latest()
 	if err != nil {
@@ -51,7 +55,7 @@ func (h *SnipHandler) Home(w http.ResponseWriter, r *http.Request) {
 	h.render(w, http.StatusOK, "home.tmpl", data)
 }
 
-func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SnipView(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	ids := params["id"]
 	id, err := strconv.Atoi(ids)
@@ -76,7 +80,7 @@ func (h *SnipHandler) SnipView(w http.ResponseWriter, r *http.Request) {
 	h.render(w, http.StatusOK, "view.tmpl", data)
 }
 
-func (h *SnipHandler) SnipCreatePost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SnipCreatePost(w http.ResponseWriter, r *http.Request) {
 
 	var form snipCreateForm
 
@@ -109,7 +113,7 @@ func (h *SnipHandler) SnipCreatePost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/snip/view/%d", id), http.StatusSeeOther)
 }
 
-func (h *SnipHandler) SnipCreate(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SnipCreate(w http.ResponseWriter, r *http.Request) {
 
 	data := h.newTemplateData(r)
 

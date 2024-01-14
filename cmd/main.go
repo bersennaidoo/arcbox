@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/bersennaidoo/arcbox/application/rest/application"
 	"github.com/bersennaidoo/arcbox/application/rest/handlers"
 	"github.com/bersennaidoo/arcbox/application/rest/mid"
-	"github.com/bersennaidoo/arcbox/application/rest/server"
 	"github.com/bersennaidoo/arcbox/foundation/formdecode"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
 	"github.com/bersennaidoo/arcbox/physical/config"
@@ -24,9 +24,9 @@ func main() {
 	sessionM := session.New(dbc)
 	h := handlers.New(log, sr, ur, tempcache, decoder, sessionM)
 	m := mid.New(log, sessionM, ur)
-	srv := server.New(h, cfg, log, m, sessionM)
-	srv.InitRouter()
+	app := application.New(h, cfg, log, m, sessionM)
+	app.InitRouter()
 
 	log.Info("Starting the application...")
-	srv.Start()
+	app.Start()
 }

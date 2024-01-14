@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/schema"
 )
 
-func (h *SnipHandler) render(w http.ResponseWriter, status int, page string, data *templateData) {
+func (h *Handler) render(w http.ResponseWriter, status int, page string, data *templateData) {
 	ts, ok := h.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
@@ -29,7 +29,7 @@ func (h *SnipHandler) render(w http.ResponseWriter, status int, page string, dat
 	buf.WriteTo(w)
 }
 
-func (h *SnipHandler) decodePostForm(r *http.Request, dst any) error {
+func (h *Handler) decodePostForm(r *http.Request, dst any) error {
 	err := r.ParseForm()
 	if err != nil {
 		return err
@@ -46,6 +46,6 @@ func (h *SnipHandler) decodePostForm(r *http.Request, dst any) error {
 	return nil
 }
 
-func (h *SnipHandler) isAuthenticated(r *http.Request) bool {
+func (h *Handler) isAuthenticated(r *http.Request) bool {
 	return h.sessionManager.Exists(r.Context(), "authenticatedUserID")
 }

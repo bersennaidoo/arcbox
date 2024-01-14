@@ -8,7 +8,7 @@ import (
 	"github.com/bersennaidoo/arcbox/domain/models"
 )
 
-func (h *SnipHandler) UserSignup(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserSignup(w http.ResponseWriter, r *http.Request) {
 
 	data := h.newTemplateData(r)
 	data.Form = userSignupForm{}
@@ -16,7 +16,7 @@ func (h *SnipHandler) UserSignup(w http.ResponseWriter, r *http.Request) {
 	h.render(w, http.StatusOK, "signup.tmpl", data)
 }
 
-func (h *SnipHandler) UserSignupPost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserSignupPost(w http.ResponseWriter, r *http.Request) {
 	var form userSignupForm
 	err := h.decodePostForm(r, &form)
 	if err != nil {
@@ -56,7 +56,7 @@ func (h *SnipHandler) UserSignupPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
-func (h *SnipHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	data := h.newTemplateData(r)
 	data.Form = userLoginForm{}
@@ -64,7 +64,7 @@ func (h *SnipHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	h.render(w, http.StatusOK, "login.tmpl", data)
 }
 
-func (h *SnipHandler) UserLoginPost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserLoginPost(w http.ResponseWriter, r *http.Request) {
 
 	var form userLoginForm
 	err := h.decodePostForm(r, &form)
@@ -106,7 +106,7 @@ func (h *SnipHandler) UserLoginPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/snip/create", http.StatusSeeOther)
 }
 
-func (h *SnipHandler) UserLogoutPost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserLogoutPost(w http.ResponseWriter, r *http.Request) {
 
 	err := h.sessionManager.RenewToken(r.Context())
 	if err != nil {
