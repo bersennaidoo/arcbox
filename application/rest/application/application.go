@@ -15,50 +15,55 @@ import (
 )
 
 type Application struct {
-	router         *mux.Router
+	Router         *mux.Router
 	Handlers       *handlers.Handler
-	config         *viper.Viper
-	log            *golog.Logger
-	mid            *mid.Middleware
-	sessionManager *scs.SessionManager
+	Config         *viper.Viper
+	Log            *golog.Logger
+	Mid            *mid.Middleware
+	SessionManager *scs.SessionManager
 }
 
-func New(Handlers *handlers.Handler, config *viper.Viper, log *golog.Logger,
-	mid *mid.Middleware, sessionManager *scs.SessionManager) *Application {
+func New(Handlers *handlers.Handler, Config *viper.Viper, Log *golog.Logger,
+	Mid *mid.Middleware, SessionManager *scs.SessionManager) *Application {
 	return &Application{
-		router:         mux.NewRouter(),
+		Router:         mux.NewRouter(),
 		Handlers:       Handlers,
-		config:         config,
-		log:            log,
-		mid:            mid,
-		sessionManager: sessionManager,
+		Config:         Config,
+		Log:            Log,
+		Mid:            Mid,
+		SessionManager: SessionManager,
 	}
 }
 
-func (a *Application) InitRouter() {
+func (a *Application) InitRouter() (*mux.Router, *mux.Router, *mux.Router, *mux.Router) {
 
 	fileServer := http.FileServer(http.FS(hci.Files))
-	a.router.PathPrefix("/static").Handler(http.StripPrefix("", fileServer))
+	a.Router.PathPrefix("/static").Handler(http.StripPrefix("", fileServer))
 
-	auth := a.router.PathPrefix("/snip").Subrouter()
-	authu := a.router.PathPrefix("/user").Subrouter()
+	auth := a.Router.PathPrefix("/snip").Subrouter()
+	authu := a.Router.PathPrefix("/user").Subrouter()
 
-	a.router.Use(a.mid.RecoverPanic, a.mid.LogRequest, a.mid.Authenticate, a.mid.SecureHeaders)
-	auth.Use(a.mid.RecoverPanic, a.mid.LogRequest, a.mid.RequireAuthentication, a.mid.SecureHeaders)
-	authu.Use(a.mid.RecoverPanic, a.mid.LogRequest, a.mid.RequireAuthentication, a.mid.SecureHeaders)
+	pingr := a.Router.PathPrefix("").Subrouter()
+	pingr.HandleFunc("/ping", handlers.Ping).Methods("GET")
+
+	a.Router.Use(a.Mid.RecoverPanic, a.Mid.LogRequest, a.Mid.Authenticate, a.Mid.SecureHeaders)
+	auth.Use(a.Mid.RecoverPanic, a.Mid.LogRequest, a.Mid.RequireAuthentication, a.Mid.SecureHeaders)
+	authu.Use(a.Mid.RecoverPanic, a.Mid.LogRequest, a.Mid.RequireAuthentication, a.Mid.SecureHeaders)
 
 	auth.HandleFunc("/create", a.Handlers.SnipCreate).Methods("GET")
 	auth.HandleFunc("/create", a.Handlers.SnipCreatePost).Methods("POST")
 
 	authu.HandleFunc("/logout", a.Handlers.UserLogoutPost).Methods("POST")
 
-	a.router.HandleFunc("/", a.Handlers.Home).Methods("GET")
-	a.router.HandleFunc("/snip/view/{id:[0-9]+}", a.Handlers.SnipView).Methods("GET")
-	a.router.HandleFunc("/user/signup", a.Handlers.UserSignup).Methods("GET")
-	a.router.HandleFunc("/user/signup", a.Handlers.UserSignupPost).Methods("POST")
-	a.router.HandleFunc("/user/login", a.Handlers.UserLogin).Methods("GET")
-	a.router.HandleFunc("/user/login", a.Handlers.UserLoginPost).Methods("POST")
-	http.Handle("/", a.router)
+	a.Router.HandleFunc("/", a.Handlers.Home).Methods("GET")
+	a.Router.HandleFunc("/snip/view/{id:[0-9]+}", a.Handlers.SnipView).Methods("GET")
+	a.Router.HandleFunc("/user/signup", a.Handlers.UserSignup).Methods("GET")
+	a.Router.HandleFunc("/user/signup", a.Handlers.UserSignupPost).Methods("POST")
+	a.Router.HandleFunc("/user/login", a.Handlers.UserLogin).Methods("GET")
+	a.Router.HandleFunc("/user/login", a.Handlers.UserLoginPost).Methods("POST")
+	http.Handle("/", a.Router)
+
+	return pingr, a.Router, auth, authu
 }
 
 func (a *Application) Start() {
@@ -69,21 +74,21 @@ func (a *Application) Start() {
 		MaxVersion:       tls.VersionTLS12,
 	}
 
-	addr := a.config.GetString("http.http_addr")
+	addr := a.Config.GetString("http.http_addr")
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      a.sessionManager.LoadAndSave(a.router),
+		Handler:      a.SessionManager.LoadAndSave(a.Router),
 		TLSConfig:    tlsConfig,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
-	a.log.Debugf("Server Starting on :3000")
+	a.Log.Debugf("Server Starting on :3000")
 
 	err := srv.ListenAndServeTLS("./documentation/certs/cert.pem",
 		"./documentation/certs/key.pem")
 	if err != nil {
-		a.log.Fatal(err)
+		a.Log.Fatal(err)
 	}
 }

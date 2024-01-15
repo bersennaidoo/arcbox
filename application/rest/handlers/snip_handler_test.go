@@ -1,33 +1,25 @@
-package handlers
+package handlers_test
 
 import (
-	"bytes"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/bersennaidoo/arcbox/foundation/assert"
-	"github.com/gorilla/mux"
+	"github.com/bersennaidoo/arcbox/foundation/testutils"
 )
 
 func TestPing(t *testing.T) {
 
-	ts := httptest.NewTLSServer(mux.NewRouter())
+	app := testutils.NewTestApplication(t)
 
-	rs, err := ts.Client().Get(ts.URL + "/ping")
-	if err != nil {
-		t.Fatal(err)
-	}
+	pingr, _, _, _ := app.InitRouter()
 
-	assert.Equal(t, rs.StatusCode, http.StatusOK)
+	ts := testutils.NewTestServer(t, pingr)
+	defer ts.Close()
 
-	defer rs.Body.Close()
-	body, err := io.ReadAll(rs.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bytes.TrimSpace(body)
+	code, _, body := ts.Get(t, "/ping")
 
-	assert.Equal(t, string(body), "OK")
+	assert.Equal(t, code, http.StatusOK)
+
+	assert.Equal(t, body, "OK")
 }

@@ -38,8 +38,8 @@ func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, usersReposit
 	}
 }
 
-func ping(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+func Ping(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "OK")
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
