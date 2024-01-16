@@ -11,8 +11,8 @@ import (
 	"github.com/bersennaidoo/arcbox/application/rest/validator"
 	"github.com/bersennaidoo/arcbox/domain/contracts"
 	"github.com/bersennaidoo/arcbox/domain/models"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
+	"github.com/julienschmidt/httprouter"
 	"github.com/kataras/golog"
 )
 
@@ -39,7 +39,9 @@ func New(log *golog.Logger, snipsRepository contracts.SnipRepositoryInterface, u
 }
 
 func Ping(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "OK")
+	fmt.Println("Inside ping")
+	w.Write([]byte("OK"))
+
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
@@ -56,18 +58,17 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SnipView(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	ids := params["id"]
-	id, err := strconv.Atoi(ids)
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
-		h.notFound(w)
+		h.NotFound(w)
 		return
 	}
 
 	snip, err := h.snipsRepository.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
-			h.notFound(w)
+			h.NotFound(w)
 		} else {
 			h.serverError(w, err)
 		}

@@ -9,13 +9,13 @@ import (
 	"github.com/bersennaidoo/arcbox/application/rest/handlers"
 	"github.com/bersennaidoo/arcbox/application/rest/mid"
 	"github.com/bersennaidoo/arcbox/hci"
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/alice"
 	"github.com/kataras/golog"
 	"github.com/spf13/viper"
 )
 
 type Application struct {
-	Router         *mux.Router
 	Handlers       *handlers.Handler
 	Config         *viper.Viper
 	Log            *golog.Logger
@@ -26,7 +26,6 @@ type Application struct {
 func New(Handlers *handlers.Handler, Config *viper.Viper, Log *golog.Logger,
 	Mid *mid.Middleware, SessionManager *scs.SessionManager) *Application {
 	return &Application{
-		Router:         mux.NewRouter(),
 		Handlers:       Handlers,
 		Config:         Config,
 		Log:            Log,
@@ -35,38 +34,40 @@ func New(Handlers *handlers.Handler, Config *viper.Viper, Log *golog.Logger,
 	}
 }
 
-func (a *Application) InitRouter() (*mux.Router, *mux.Router, *mux.Router, *mux.Router) {
+func (a *Application) InitRouter() http.Handler {
+
+	router := httprouter.New()
+
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		a.Handlers.NotFound(w)
+	})
 
 	fileServer := http.FileServer(http.FS(hci.Files))
-	a.Router.PathPrefix("/static").Handler(http.StripPrefix("", fileServer))
 
-	auth := a.Router.PathPrefix("/snip").Subrouter()
-	authu := a.Router.PathPrefix("/user").Subrouter()
+	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
-	pingr := a.Router.PathPrefix("").Subrouter()
-	pingr.HandleFunc("/ping", handlers.Ping).Methods("GET")
+	router.HandlerFunc(http.MethodGet, "/ping", handlers.Ping)
 
-	a.Router.Use(a.Mid.RecoverPanic, a.Mid.LogRequest, a.Mid.Authenticate, a.Mid.SecureHeaders)
-	auth.Use(a.Mid.RecoverPanic, a.Mid.LogRequest, a.Mid.RequireAuthentication, a.Mid.SecureHeaders)
-	authu.Use(a.Mid.RecoverPanic, a.Mid.LogRequest, a.Mid.RequireAuthentication, a.Mid.SecureHeaders)
+	dynamic := alice.New(a.SessionManager.LoadAndSave, a.Mid.Authenticate)
 
-	auth.HandleFunc("/create", a.Handlers.SnipCreate).Methods("GET")
-	auth.HandleFunc("/create", a.Handlers.SnipCreatePost).Methods("POST")
+	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(a.Handlers.Home))
+	router.Handler(http.MethodGet, "/snip/view/:id", dynamic.ThenFunc(a.Handlers.SnipView))
+	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(a.Handlers.UserSignup))
+	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(a.Handlers.UserSignupPost))
+	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(a.Handlers.UserLogin))
+	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(a.Handlers.UserLoginPost))
 
-	authu.HandleFunc("/logout", a.Handlers.UserLogoutPost).Methods("POST")
+	protected := dynamic.Append(a.Mid.RequireAuthentication)
 
-	a.Router.HandleFunc("/", a.Handlers.Home).Methods("GET")
-	a.Router.HandleFunc("/snip/view/{id:[0-9]+}", a.Handlers.SnipView).Methods("GET")
-	a.Router.HandleFunc("/user/signup", a.Handlers.UserSignup).Methods("GET")
-	a.Router.HandleFunc("/user/signup", a.Handlers.UserSignupPost).Methods("POST")
-	a.Router.HandleFunc("/user/login", a.Handlers.UserLogin).Methods("GET")
-	a.Router.HandleFunc("/user/login", a.Handlers.UserLoginPost).Methods("POST")
-	http.Handle("/", a.Router)
+	router.Handler(http.MethodGet, "/snip/create", protected.ThenFunc(a.Handlers.SnipCreate))
+	router.Handler(http.MethodPost, "/snip/create", protected.ThenFunc(a.Handlers.SnipCreatePost))
+	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(a.Handlers.UserLogoutPost))
 
-	return pingr, a.Router, auth, authu
+	standard := alice.New(a.Mid.RecoverPanic, a.Mid.LogRequest, a.Mid.SecureHeaders)
+	return standard.Then(router)
 }
 
-func (a *Application) Start() {
+func (a *Application) Start(n http.Handler) {
 
 	tlsConfig := &tls.Config{
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
@@ -77,7 +78,7 @@ func (a *Application) Start() {
 	addr := a.Config.GetString("http.http_addr")
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      a.SessionManager.LoadAndSave(a.Router),
+		Handler:      a.SessionManager.LoadAndSave(n),
 		TLSConfig:    tlsConfig,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,

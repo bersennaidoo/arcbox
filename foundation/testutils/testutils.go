@@ -17,7 +17,6 @@ import (
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mocks"
 	"github.com/bersennaidoo/arcbox/physical/config"
 	"github.com/bersennaidoo/arcbox/physical/logger"
-	"github.com/gorilla/mux"
 )
 
 func NewTestApplication(t *testing.T) *application.Application {
@@ -41,7 +40,6 @@ func NewTestApplication(t *testing.T) *application.Application {
 	midMock := mid.New(log, sessionMockManager, mur)
 
 	return &application.Application{
-		Router:         mux.NewRouter(),
 		Handlers:       h,
 		Config:         cfg,
 		Log:            log,
@@ -55,6 +53,7 @@ type TestServer struct {
 }
 
 func NewTestServer(t *testing.T, h http.Handler) *TestServer {
+	t.Helper()
 	ts := httptest.NewTLSServer(h)
 
 	jar, err := cookiejar.New(nil)

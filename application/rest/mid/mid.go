@@ -8,6 +8,7 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/bersennaidoo/arcbox/domain/contracts"
+	"github.com/justinas/nosurf"
 	"github.com/kataras/golog"
 )
 
@@ -43,6 +44,18 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+
+}
+
+func (m *Middleware) NoSurf(next http.Handler) http.Handler {
+	csrfHandler := nosurf.New(next)
+	csrfHandler.SetBaseCookie(http.Cookie{
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+	})
+
+	return csrfHandler
 }
 
 func (m *Middleware) RequireAuthentication(next http.Handler) http.Handler {
@@ -56,6 +69,7 @@ func (m *Middleware) RequireAuthentication(next http.Handler) http.Handler {
 	})
 }
 
+// Internal helper
 func (m *Middleware) isAuthenticated(r *http.Request) bool {
 	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
 	if !ok {

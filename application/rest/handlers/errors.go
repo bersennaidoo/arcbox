@@ -17,6 +17,6 @@ func (h *Handler) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (h *Handler) notFound(w http.ResponseWriter) {
+func (h *Handler) NotFound(w http.ResponseWriter) {
 	h.clientError(w, http.StatusNotFound)
 }

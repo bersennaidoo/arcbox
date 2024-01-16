@@ -25,8 +25,8 @@ func main() {
 	h := handlers.New(log, sr, ur, tempcache, decoder, sessionM)
 	m := mid.New(log, sessionM, ur)
 	app := application.New(h, cfg, log, m, sessionM)
-	app.InitRouter()
+	n := app.InitRouter()
 
 	log.Info("Starting the application...")
-	app.Start()
+	app.Start(n)
 }
