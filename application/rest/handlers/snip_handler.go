@@ -9,8 +9,8 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/bersennaidoo/arcbox/application/rest/validator"
+	"github.com/bersennaidoo/arcbox/domain/contracts"
 	"github.com/bersennaidoo/arcbox/domain/models"
-	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/kataras/golog"
@@ -18,14 +18,14 @@ import (
 
 type Handler struct {
 	log             *golog.Logger
-	snipsRepository *mysql.SnipsRepository
-	usersRepository *mysql.UsersRepository
+	snipsRepository contracts.SnipRepositoryInterface
+	usersRepository contracts.UserRepositoryInterface
 	templateCache   map[string]*template.Template
 	formDecoder     *schema.Decoder
 	sessionManager  *scs.SessionManager
 }
 
-func New(log *golog.Logger, snipsRepository *mysql.SnipsRepository, usersRepository *mysql.UsersRepository,
+func New(log *golog.Logger, snipsRepository contracts.SnipRepositoryInterface, usersRepository contracts.UserRepositoryInterface,
 	templateCache map[string]*template.Template, formDecoder *schema.Decoder,
 	sessionManager *scs.SessionManager) *Handler {
 	return &Handler{

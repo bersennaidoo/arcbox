@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/bersennaidoo/arcbox/application/rest/application"
 	"github.com/bersennaidoo/arcbox/application/rest/handlers"
 	"github.com/bersennaidoo/arcbox/application/rest/mid"
 	"github.com/bersennaidoo/arcbox/foundation/formdecode"
-	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
+	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mocks"
 	"github.com/bersennaidoo/arcbox/physical/config"
-	"github.com/bersennaidoo/arcbox/physical/dbc"
 	"github.com/bersennaidoo/arcbox/physical/logger"
-	"github.com/bersennaidoo/arcbox/physical/session"
 	"github.com/gorilla/mux"
 )
 
@@ -23,22 +24,29 @@ func NewTestApplication(t *testing.T) *application.Application {
 	log := logger.New()
 	filename := config.GetConfigFileName()
 	cfg := config.New(filename)
-	dbc := dbc.New(cfg)
-	sr := mysql.NewSnipsRepository(dbc)
-	ur := mysql.NewUsersRepository(dbc)
+	//dbc := dbc.New(cfg)
+	//sr := mysql.NewSnipsRepository(dbc)
+	//ur := mysql.NewUsersRepository(dbc)
+	msr := &mocks.SnipsMockRepository{}
+	mur := &mocks.UsersMockRepository{}
 	decoder := formdecode.New()
 	tempcache, _ := handlers.NewTemplateCache()
-	sessionM := session.New(dbc)
-	h := handlers.New(log, sr, ur, tempcache, decoder, sessionM)
-	m := mid.New(log, sessionM, ur)
+	//sessionM := session.New(dbc)
+	sessionMockManager := scs.New()
+	sessionMockManager.Lifetime = 12 * time.Hour
+	sessionMockManager.Cookie.Secure = true
+
+	h := handlers.New(log, msr, mur, tempcache, decoder, sessionMockManager)
+	//m := mid.New(log, sessionM, ur)
+	midMock := mid.New(log, sessionMockManager, mur)
 
 	return &application.Application{
 		Router:         mux.NewRouter(),
 		Handlers:       h,
 		Config:         cfg,
 		Log:            log,
-		Mid:            m,
-		SessionManager: sessionM,
+		Mid:            midMock,
+		SessionManager: sessionMockManager,
 	}
 }
 
@@ -48,6 +56,18 @@ type TestServer struct {
 
 func NewTestServer(t *testing.T, h http.Handler) *TestServer {
 	ts := httptest.NewTLSServer(h)
+
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ts.Client().Jar = jar
+
+	ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
 	return &TestServer{ts}
 }
 

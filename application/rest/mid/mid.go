@@ -7,17 +7,17 @@ import (
 	"runtime/debug"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
+	"github.com/bersennaidoo/arcbox/domain/contracts"
 	"github.com/kataras/golog"
 )
 
 type Middleware struct {
 	log             *golog.Logger
 	sessionManager  *scs.SessionManager
-	usersRepository *mysql.UsersRepository
+	usersRepository contracts.UserRepositoryInterface
 }
 
-func New(log *golog.Logger, sessionManager *scs.SessionManager, usersRepository *mysql.UsersRepository) *Middleware {
+func New(log *golog.Logger, sessionManager *scs.SessionManager, usersRepository contracts.UserRepositoryInterface) *Middleware {
 	return &Middleware{
 		log:             log,
 		sessionManager:  sessionManager,
