@@ -2,21 +2,23 @@ package testutils
 
 import (
 	"bytes"
+	"html"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/bersennaidoo/arcbox/application/rest/application"
-	"github.com/bersennaidoo/arcbox/application/rest/handlers"
-	"github.com/bersennaidoo/arcbox/application/rest/mid"
 	"github.com/bersennaidoo/arcbox/foundation/formdecode"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mocks"
 	"github.com/bersennaidoo/arcbox/physical/config"
 	"github.com/bersennaidoo/arcbox/physical/logger"
+	"github.com/bersennaidoo/arcbox/transport/http/application"
+	"github.com/bersennaidoo/arcbox/transport/http/handlers"
+	"github.com/bersennaidoo/arcbox/transport/http/mid"
 )
 
 func NewTestApplication(t *testing.T) *application.Application {
@@ -83,4 +85,17 @@ func (ts *TestServer) Get(t *testing.T, urlPath string) (int, http.Header, strin
 	}
 	bytes.TrimSpace(body)
 	return rs.StatusCode, rs.Header, string(body)
+}
+
+var csrfTokenRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'>`)
+
+func ExtractCSRFToken(t *testing.T, body string) string {
+
+	matches := csrfTokenRX.FindStringSubmatch(body)
+
+	if len(matches) < 2 {
+		t.Fatal("no csrf token found in body")
+	}
+
+	return html.UnescapeString(string(matches[1]))
 }

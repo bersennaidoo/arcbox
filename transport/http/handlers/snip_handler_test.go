@@ -82,3 +82,16 @@ func TestSnipView(t *testing.T) {
 		})
 	}
 }
+
+func TestUserSignup(t *testing.T) {
+
+	app := testutils.NewTestApplication(t)
+
+	ts := testutils.NewTestServer(t, app.InitRouter())
+	defer ts.Close()
+
+	_, _, body := ts.Get(t, "/user/signup")
+	csrfToken := testutils.ExtractCSRFToken(t, body)
+
+	t.Logf("CSRF token is: %q", csrfToken)
+}

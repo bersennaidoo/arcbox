@@ -7,22 +7,23 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/bersennaidoo/arcbox/application/rest/validator"
 	"github.com/bersennaidoo/arcbox/domain/models"
 	"github.com/bersennaidoo/arcbox/hci"
+	"github.com/bersennaidoo/arcbox/transport/http/validator"
+	"github.com/justinas/nosurf"
 )
 
 type snipCreateForm struct {
-	Title               string `schema:"title"`
-	Content             string `schema:"content"`
-	Expires             int    `schema:"expires"`
-	validator.Validator `schema:"-"`
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 type userLoginForm struct {
-	Email               string `schema:"email"`
-	Password            string `schema:"password"`
-	validator.Validator `schema:"-"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
 }
 
 type templateData struct {
@@ -32,13 +33,14 @@ type templateData struct {
 	Form            any
 	Flash           string
 	IsAuthenticated bool
+	CSRFToken       string
 }
 
 type userSignupForm struct {
-	Name                string `schema:"name"`
-	Email               string `schema:"email"`
-	Password            string `schema:"password"`
-	validator.Validator `schema:"-"`
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
 }
 
 func humanDate(t time.Time) string {
@@ -83,5 +85,6 @@ func (h *Handler) newTemplateData(r *http.Request) *templateData {
 		CurrentYear:     time.Now().Year(),
 		Flash:           h.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: h.isAuthenticated(r),
+		CSRFToken:       nosurf.Token(r),
 	}
 }

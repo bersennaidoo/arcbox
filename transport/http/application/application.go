@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/bersennaidoo/arcbox/application/rest/handlers"
-	"github.com/bersennaidoo/arcbox/application/rest/mid"
 	"github.com/bersennaidoo/arcbox/hci"
+	"github.com/bersennaidoo/arcbox/transport/http/handlers"
+	"github.com/bersennaidoo/arcbox/transport/http/mid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 	"github.com/kataras/golog"
@@ -48,7 +48,7 @@ func (a *Application) InitRouter() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/ping", handlers.Ping)
 
-	dynamic := alice.New(a.SessionManager.LoadAndSave, a.Mid.Authenticate)
+	dynamic := alice.New(a.SessionManager.LoadAndSave, a.Mid.NoSurf, a.Mid.Authenticate)
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(a.Handlers.Home))
 	router.Handler(http.MethodGet, "/snip/view/:id", dynamic.ThenFunc(a.Handlers.SnipView))

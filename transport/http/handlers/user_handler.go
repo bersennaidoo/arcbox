@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/bersennaidoo/arcbox/application/rest/validator"
 	"github.com/bersennaidoo/arcbox/domain/models"
+	"github.com/bersennaidoo/arcbox/transport/http/validator"
 )
 
 func (h *Handler) UserSignup(w http.ResponseWriter, r *http.Request) {

@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/bersennaidoo/arcbox/application/rest/application"
-	"github.com/bersennaidoo/arcbox/application/rest/handlers"
-	"github.com/bersennaidoo/arcbox/application/rest/mid"
 	"github.com/bersennaidoo/arcbox/foundation/formdecode"
 	"github.com/bersennaidoo/arcbox/infrastructure/repositories/mysql"
 	"github.com/bersennaidoo/arcbox/physical/config"
 	"github.com/bersennaidoo/arcbox/physical/dbc"
 	"github.com/bersennaidoo/arcbox/physical/logger"
 	"github.com/bersennaidoo/arcbox/physical/session"
+	"github.com/bersennaidoo/arcbox/transport/http/application"
+	"github.com/bersennaidoo/arcbox/transport/http/handlers"
+	"github.com/bersennaidoo/arcbox/transport/http/mid"
 )
 
 func main() {

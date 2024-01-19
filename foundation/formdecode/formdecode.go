@@ -1,10 +1,10 @@
 package formdecode
 
-import "github.com/gorilla/schema"
+import "github.com/go-playground/form/v4"
 
-func New() *schema.Decoder {
+func New() *form.Decoder {
 
-	decoder := schema.NewDecoder()
+	decoder := form.NewDecoder()
 
 	return decoder
 }
